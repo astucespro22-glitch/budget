@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Budget Survivor - Défi Fin de Mois</title>
+<style>
+  * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: #0f172a;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+  }
+  #game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: radial-gradient(circle at top, #065f46 0%, #0f172a 100%);
+    color: #fff;
+  }
+  #game-container.vip-theme {
+    background: radial-gradient(circle at top, #78350f 0%, #090d16 100%);
+  }
+
+  /* HUD Financier */
+  #hud {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    max-width: 680px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .hud-card {
+    background: rgba(15, 23, 42, 0.9);
+    border: 2px solid rgba(250, 204, 21, 0.5);
+    border-radius: 14px;
+    padding: 6px 10px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+  }
+  .hud-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    font-weight: 800;
+  }
+  .hud-val {
+    font-size: clamp(13px, 3.3vw, 17px);
+    font-weight: 900;
+    color: #facc15;
+    margin-top: 2px;
+  }
+
+  /* Barre de progression du mois (Jour 1 -> 30) */
+  .month-bar-wrap {
+    max-width: 680px;
+    width: 100%;
+    margin: 8px auto 0 auto;
+  }
+  .month-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 800;
+    color: #cbd5e1;
+    margin-bottom: 4px;
+  }
+  .bar-bg {
+    width: 100%;
+    height: 10px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  #month-progress {
+    width: 3%;
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #facc15);
+    transition: width 0.25s ease;
+  }
+
+  /* Carte d'événement quotidien */
+  .stage-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    max-width: 620px;
+    width: 100%;
+    margin: 0 auto;
+    gap: 12px;
+  }
+  .event-card {
+    background: rgba(30, 41, 59, 0.94);
+    border: 2px solid #facc15;
+    border-radius: 20px;
+    padding: 18px 20px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+  }
+  .event-icon {
+    font-size: clamp(34px, 8vw, 48px);
+    margin-bottom: 6px;
+  }
+  .event-tag {
+    display: inline-block;
+    background: rgba(250, 204, 21, 0.2);
+    color: #facc15;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 3px 12px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  #event-title {
+    font-size: clamp(17px, 4.2vw, 22px);
+    font-weight: 900;
+    margin-bottom: 6px;
+    color: #fff;
+  }
+  #event-desc {
+    font-size: clamp(13px, 3.2vw, 15px);
+    color: #cbd5e1;
+    line-height: 1.4;
+  }
+
+  /* Boutons de choix */
+  .choices-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  .choice-btn {
+    background: rgba(15, 23, 42, 0.92);
+    border: 2px solid #475569;
+    color: #fff;
+    padding: 13px 16px;
+    border-radius: 14px;
+    font-size: clamp(13px, 3.2vw, 15px);
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    transition: transform 0.1s, border-color 0.15s;
+  }
+  .choice-btn:hover { border-color: #facc15; }
+  .choice-btn:active { transform: scale(0.98); }
+  .impact-pill {
+    font-size: 12px;
+    font-weight: 900;
+    padding: 4px 10px;
+    border-radius: 10px;
+    white-space: nowrap;
+    background: rgba(255,255,255,0.1);
+  }
+  .impact-neg { color: #f87171; }
+  .impact-pos { color: #4ade80; }
+
+  #toast-feedback {
+    min-height: 22px;
+    font-size: 14px;
+    font-weight: 800;
+    text-align: center;
+    color: #4ade80;
+  }
+
+  /* Écrans Accueil & Fin */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(5px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+    padding: 16px;
+    z-index: 30;
+    overflow-y: auto;
+  }
+  .hidden { display: none !important; }
+  h1 {
+    font-size: clamp(23px, 5.5vw, 40px);
+    color: #facc15;
+    text-shadow: 0 4px 0 #065f46, 0 8px 15px rgba(0,0,0,0.6);
+    margin-bottom: 10px;
+  }
+  .howto-card {
+    background: rgba(30, 41, 59, 0.92);
+    border: 2px solid rgba(250, 204, 21, 0.55);
+    border-radius: 16px;
+    padding: 12px 16px;
+    max-width: 480px;
+    width: 100%;
+    margin-bottom: 12px;
+    text-align: left;
+  }
+  .howto-title {
+    font-size: 13px;
+    font-weight: 900;
+    color: #facc15;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+  .howto-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: clamp(12px, 2.8vw, 13.5px);
+    color: #e2e8f0;
+    line-height: 1.35;
+  }
+
+  /* Configuration du salaire initial */
+  .setup-box {
+    background: rgba(15, 23, 42, 0.9);
+    border: 2px solid #38bdf8;
+    border-radius: 16px;
+    padding: 12px 16px;
+    max-width: 480px;
+    width: 100%;
+    margin-bottom: 14px;
+  }
+  .setup-label {
+    font-size: 12px;
+    font-weight: 800;
+    color: #38bdf8;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .input-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+  input[type="number"], select {
+    background: #1e293b;
+    border: 2px solid #475569;
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 900;
+    text-align: center;
+    outline: none;
+  }
+  input[type="number"] { width: 62%; }
+  select { width: 34%; cursor: pointer; }
+  input:focus, select:focus { border-color: #facc15; }
+
+  .btn-main {
+    background: linear-gradient(180deg, #22c55e 0%, #15803d 100%);
+    color: #fff;
+    border: 3px solid #facc15;
+    padding: 13px 34px;
+    font-size: clamp(15px, 3.8vw, 19px);
+    font-weight: 900;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #052e16;
+    text-transform: uppercase;
+  }
+  .btn-main:active { transform: translateY(4px); }
+  .btn-share {
+    background: linear-gradient(180deg, #facc15 0%, #eab308 100%);
+    color: #0f172a;
+    border: 2px solid #fff;
+    padding: 11px 20px;
+    border-radius: 50px;
+    font-size: clamp(12px, 3vw, 14px);
+    font-weight: 900;
+    cursor: pointer;
+    margin-top: 12px;
+    box-shadow: 0 5px 0 #a16207;
+  }
+  .profile-badge {
+    background: rgba(250, 204, 21, 0.16);
+    border: 2px solid #facc15;
+    border-radius: 16px;
+    padding: 12px 18px;
+    max-width: 450px;
+    width: 100%;
+    margin-bottom: 14px;
+  }
+  .profile-title {
+    font-size: clamp(18px, 4.5vw, 23px);
+    font-weight: 900;
+    color: #4ade80;
+    margin-bottom: 4px;
+  }
+  .stats-grid {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .stat-card {
+    background: rgba(255,255,255,0.1);
+    padding: 9px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(250, 204, 21, 0.4);
+  }
+  .stat-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; }
+  .stat-val { font-size: clamp(16px, 4vw, 21px); font-weight: 900; color: #facc15; }
+</style>
+</head>
+<body>
+
+<div id="game-container">
+  <div id="hud">
+    <div class="hud-card">
+      <div class="hud-label">💰 Solde</div>
+      <div class="hud-val" id="hud-cash" style="color:#4ade80;">0</div>
+    </div>
+    <div class="hud-card">
+      <div class="hud-label">🏦 Épargne</div>
+      <div class="hud-val" id="hud-savings" style="color:#38bdf8;">0</div>
+    </div>
+    <div class="hud-card">
+      <div class="hud-label">😊 Moral</div>
+      <div class="hud-val" id="hud-mood">100%</div>
+    </div>
+  </div>
+
+  <div class="month-bar-wrap">
+    <div class="month-meta">
+      <span id="day-label">📅 Jour 1 / 30</span>
+      <span id="phase-label" style="color:#4ade80;">Semaine 1 : Début de mois</span>
+    </div>
+    <div class="bar-bg">
+      <div id="month-progress"></div>
+    </div>
+  </div>
+
+  <div class="stage-area">
+    <div class="event-card">
+      <div class="event-icon" id="event-icon">💼</div>
+      <div class="event-tag" id="event-tag">DÉCISION DU JOUR</div>
+      <div id="event-title">Le mois commence !</div>
+      <div id="event-desc">Prépare-toi à gérer tes dépenses et imprévus jusqu'au 30.</div>
+    </div>
+
+    <div class="choices-wrap" id="choices-wrap"></div>
+    <div id="toast-feedback"></div>
+  </div>
+
+  <div id="start-screen" class="overlay">
+    <h1>💸 BUDGET SURVIVOR</h1>
+    <div class="howto-card">
+      <div class="howto-title">📋 Comment jouer (Défi 30 Jours)</div>
+      <ul class="howto-list">
+        <li>1️⃣ <b>Entre ton budget mensuel</b> ci-dessous (salaire ou argent de poche).</li>
+        <li>2️⃣ <b>Fais les bons choix</b> chaque jour face aux factures, sorties, imprévus et opportunités de gains.</li>
+        <li>3️⃣ <b>Objectif :</b> Arriver au <b>Jour 30</b> sans finir à 0 et avec un maximum d'<b>Épargne</b> et de <b>Moral</b> !</li>
+      </ul>
+    </div>
+    <div class="setup-box">
+      <div class="setup-label">💵 Choisis ton budget de départ :</div>
+      <div class="input-row">
+        <input type="number" id="initial-budget" value="150000" min="100" step="500">
+        <select id="currency-select">
+          <option value="FCFA" selected>FCFA</option>
+          <option value="€">€ (Euro)</option>
+          <option value="$">$ (USD)</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-main" id="start-btn">DÉMARRER LE MOIS</button>
+  </div>
+
+  <div id="gameover-screen" class="overlay hidden">
+    <h1 id="end-headline">📅 BILAN DU MOIS</h1>
+    <div class="profile-badge">
+      <div class="profile-title" id="profile-title">👑 STRATÈGE FINANCIER</div>
+      <div style="font-size:13px; color:#cbd5e1;" id="profile-desc">Tu as traversé le mois avec brio !</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Reste</div>
+        <div class="stat-val" id="final-cash" style="color:#4ade80;">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Épargne</div>
+        <div class="stat-val" id="final-savings" style="color:#38bdf8;">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Moral</div>
+        <div class="stat-val" id="final-mood">100%</div>
+      </div>
+    </div>
+    <button class="btn-main" id="restart-btn">NOUVEAU MOIS</button>
+    <button class="btn-share" id="share-btn">🎁 PARTAGER MON PROFIL SUR WHATSAPP</button>
+  </div>
+</div>
+
+<script>
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playSound(type) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  const now = audioCtx.currentTime;
+
+  if (type === 'gain') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(587, now);
+    osc.frequency.setValueAtTime(880, now + 0.08);
+    gain.gain.setValueAtTime(0.11, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    osc.start(now); osc.stop(now + 0.25);
+  } else if (type === 'spend') {
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(190, now + 0.14);
+    gain.gain.setValueAtTime(0.1, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    osc.start(now); osc.stop(now + 0.15);
+  } else if (type === 'bankrupt') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(200, now);
+    osc.frequency.linearRampToValueAtTime(70, now + 0.45);
+    gain.gain.setValueAtTime(0.14, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.46);
+    osc.start(now); osc.stop(now + 0.46);
+  }
+}
+
+// Scénarios proportionnels au budget initial (pct = pourcentage du revenu de départ)
+const SCENARIOS = [
+  {
+    icon: '🏠', tag: 'CHARGE FIXE', title: 'Paiement du Loyer & Factures',
+    desc: 'Le propriétaire passe récupérer le loyer du mois et l’électricité.',
+    choices: [
+      { text: 'Payer tout rubis sur l’ongle', pctCash: -0.28, pctSave: 0, mood: +5 },
+      { text: 'Payer et réduire la clim/lumière', pctCash: -0.24, pctSave: +0.02, mood: -5 }
+    ]
+  },
+  {
+    icon: '🏦', tag: 'STRATÉGIE', title: 'Règle des 10 % d’Épargne',
+    desc: 'Tu viens de recevoir ton budget. Combien mets-tu de côté tout de suite ?',
+    choices: [
+      { text: 'Bloquer 15 % en épargne sécurisée', pctCash: -0.15, pctSave: +0.17, mood: +4 },
+      { text: 'Garder tout sur moi au cas où', pctCash: 0, pctSave: 0, mood: 0 }
+    ]
+  },
+  {
+    icon: '🍲', tag: 'ALIMENTATION', title: 'Courses de la semaine',
+    desc: 'Le frigo est vide. Comment organises-tu tes repas ?',
+    choices: [
+      { text: 'Cuisiner maison (marché local)', pctCash: -0.08, pctSave: 0, mood: +4 },
+      { text: 'Commander fast-food & livraisons', pctCash: -0.16, pctSave: 0, mood: +8 }
+    ]
+  },
+  {
+    icon: '📱', tag: 'TENTATION', title: 'Promo flash sur un nouveau téléphone',
+    desc: 'Une boutique affiche -20 % aujourd’hui seulement sur le dernier modèle !',
+    choices: [
+      { text: 'Résister, mon téléphone marche bien', pctCash: 0, pctSave: +0.03, mood: -4 },
+      { text: 'Craquer et acheter à crédit/cash', pctCash: -0.25, pctSave: 0, mood: +12 }
+    ]
+  },
+  {
+    icon: '🛵', tag: 'TRANSPORT', title: 'Déplacements quotidiens',
+    desc: 'Comment te déplaces-tu pour tes rendez-vous cette semaine ?',
+    choices: [
+      { text: 'Transport économique / covoiturage', pctCash: -0.05, pctSave: 0, mood: -3 },
+      { text: 'Taxi privé / VTC tous les jours', pctCash: -0.13, pctSave: 0, mood: +6 }
+    ]
+  },
+  {
+    icon: '💡', tag: 'OPPORTUNITÉ', title: 'Petit contrat / Revente express',
+    desc: 'Un ami te propose une mission rapide ce week-end pour arrondir tes fins de mois.',
+    choices: [
+      { text: 'Accepter la mission (+revenu)', pctCash: +0.14, pctSave: 0, mood: -8 },
+      { text: 'Se reposer ce week-end', pctCash: 0, pctSave: 0, mood: +10 }
+    ]
+  },
+  {
+    icon: '🎉', tag: 'VIE SOCIALE', title: 'Sortie entre amis vendredi soir',
+    desc: 'Tes amis t’invitent au restaurant puis en soirée VIP.',
+    choices: [
+      { text: 'Venir mais limiter les dépenses', pctCash: -0.06, pctSave: 0, mood: +6 },
+      { text: 'Payer la tournée générale !', pctCash: -0.18, pctSave: 0, mood: +14 },
+      { text: 'Décliner et rester économiser', pctCash: 0, pctSave: 0, mood: -10 }
+    ]
+  },
+  {
+    icon: '🤒', tag: 'IMPRÉVU', title: 'Coup de fatigue & Pharmacie',
+    desc: 'Un petit paludisme ou rhume nécessite des médicaments rapidement.',
+    choices: [
+      { text: 'Aller à la pharmacie tout de suite', pctCash: -0.07, pctSave: 0, mood: +5 },
+      { text: 'Attendre que ça passe tout seul', pctCash: -0.02, pctSave: 0, mood: -15 }
+    ]
+  },
+  {
+    icon: '📈', tag: 'INVESTISSEMENT', title: 'Achat en gros pour revendre',
+    desc: 'Une connaissance propose un lot de produits très demandés à prix réduit.',
+    choices: [
+      { text: 'Investir une petite part et revendre', pctCash: +0.12, pctSave: +0.05, mood: +4 },
+      { text: 'Ne pas prendre de risque', pctCash: 0, pctSave: 0, mood: 0 }
+    ]
+  },
+  {
+    icon: '🎁', tag: 'FAMILLE', title: 'Cérémonie familiale imprévue',
+    desc: 'Un proche organise un événement et compte sur ta participation.',
+    choices: [
+      { text: 'Participer raisonnablement', pctCash: -0.07, pctSave: 0, mood: +5 },
+      { text: 'Faire un gros cadeau prestigieux', pctCash: -0.16, pctSave: 0, mood: +10 }
+    ]
+  },
+  {
+    icon: '📶', tag: 'ABONNEMENTS', title: 'Forfait Internet & Streaming',
+    desc: 'Ton forfait internet expire ce soir.',
+    choices: [
+      { text: 'Prendre le forfait essentiel', pctCash: -0.04, pctSave: 0, mood: 0 },
+      { text: 'Prendre le pack illimité + TV + Musique', pctCash: -0.10, pctSave: 0, mood: +6 }
+    ]
+  },
+  {
+    icon: '🔧', tag: 'IMPRÉVU', title: 'Panne d’équipement à la maison',
+    desc: 'Un appareil indispensable tombe en panne en pleine semaine.',
+    choices: [
+      { text: 'Faire réparer chez un artisan local', pctCash: -0.06, pctSave: 0, mood: +2 },
+      { text: 'Acheter du neuf immédiatement', pctCash: -0.17, pctSave: 0, mood: +5 }
+    ]
+  }
+];
+
+let initialBudget = 150000;
+let currency = 'FCFA';
+let cash = 0;
+let savings = 0;
+let mood = 100;
+let day = 1;
+let stepIndex = 0;
+let monthDeck = [];
+
+function formatMoney(val) {
+  const rounded = Math.round(val);
+  return rounded.toLocaleString('fr-FR') + ' ' + currency;
+}
+
+function updateHUD() {
+  const cashEl = document.getElementById('hud-cash');
+  cashEl.textContent = formatMoney(cash);
+  cashEl.style.color = cash < initialBudget * 0.15 ? '#f87171' : '#4ade80';
+
+  document.getElementById('hud-savings').textContent = formatMoney(savings);
+  const moodEl = document.getElementById('hud-mood');
+  moodEl.textContent = mood + '%';
+  moodEl.style.color = mood < 30 ? '#f87171' : '#facc15';
+
+  document.getElementById('day-label').textContent = `📅 Jour ${day} / 30`;
+  document.getElementById('month-progress').style.width = `${Math.min(100, (day / 30) * 100)}%`;
+
+  const phaseEl = document.getElementById('phase-label');
+  if (day <= 10) { phaseEl.textContent = '🟢 Semaine 1 : Tout va bien'; phaseEl.style.color = '#4ade80'; }
+  else if (day <= 20) { phaseEl.textContent = '🟡 Semaine 2-3 : Mi-mois critique'; phaseEl.style.color = '#facc15'; }
+  else { phaseEl.textContent = '🔴 Semaine 4 : Dernière ligne droite !'; phaseEl.style.color = '#f87171'; }
+}
+
+function startGame() {
+  initAudio();
+  const inputVal = parseFloat(document.getElementById('initial-budget').value);
+  initialBudget = (!isNaN(inputVal) && inputVal >= 100) ? inputVal : 150000;
+  currency = document.getElementById('currency-select').value;
+
+  cash = initialBudget;
+  savings = 0;
+  mood = 100;
+  day = 1;
+  stepIndex = 0;
+
+  // Créer une suite de 10 événements sur les 30 jours (chaque choix fait avancer de 3 jours)
+  const fixedFirst = [SCENARIOS[1], SCENARIOS[0]];
+  const others = SCENARIOS.slice(2).sort(() => Math.random() - 0.5).slice(0, 8);
+  monthDeck = [...fixedFirst, ...others];
+
+  document.getElementById('toast-feedback').textContent = '';
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('gameover-screen').classList.add('hidden');
+
+  updateHUD();
+  renderCurrentEvent();
+}
+
+function renderCurrentEvent() {
+  const ev = monthDeck[stepIndex];
+  document.getElementById('event-icon').textContent = ev.icon;
+  document.getElementById('event-tag').textContent = ev.tag;
+  document.getElementById('event-title').textContent = ev.title;
+  document.getElementById('event-desc').textContent = ev.desc;
+
+  const wrap = document.getElementById('choices-wrap');
+  wrap.innerHTML = '';
+
+  ev.choices.forEach(ch => {
+    const deltaCash = Math.round(initialBudget * ch.pctCash);
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+
+    let impactStr = '';
+    if (deltaCash > 0) impactStr = `+${formatMoney(deltaCash)}`;
+    else if (deltaCash < 0) impactStr = `${formatMoney(deltaCash)}`;
+    else impactStr = '0 ' + currency;
+
+    const pillClass = deltaCash >= 0 ? 'impact-pos' : 'impact-neg';
+    btn.innerHTML = `<span>${ch.text}</span><span class="impact-pill ${pillClass}">${impactStr}</span>`;
+    btn.onclick = () => makeChoice(ch);
+    wrap.appendChild(btn);
+  });
+}
+
+function makeChoice(ch) {
+  const deltaCash = Math.round(initialBudget * ch.pctCash);
+  const deltaSave = Math.round(initialBudget * ch.pctSave);
+
+  cash += deltaCash;
+  savings += deltaSave;
+  mood = Math.max(0, Math.min(100, mood + ch.mood));
+
+  const toast = document.getElementById('toast-feedback');
+  if (deltaCash >= 0) {
+    playSound('gain');
+    toast.textContent = `💰 Bonne opération ! Solde ${deltaCash > 0 ? '+' + formatMoney(deltaCash) : 'préservé'}`;
+    toast.style.color = '#4ade80';
+  } else {
+    playSound('spend');
+    toast.textContent = `💸 Dépense enregistrée : ${formatMoney(deltaCash)} | Moral ${ch.mood >= 0 ? '+' + ch.mood : ch.mood}%`;
+    toast.style.color = '#facc15';
+  }
+
+  // Vérifier faillite ou épuisement moral avant la fin du mois
+  if (cash < 0) {
+    cash = 0;
+    updateHUD();
+    playSound('bankrupt');
+    endMonth(true, '💥 DÉCOUVERT AU JOUR ' + day + ' !');
+    return;
+  }
+
+  stepIndex++;
+  day = Math.min(30, day + 3);
+  updateHUD();
+
+  if (stepIndex >= monthDeck.length) {
+    endMonth(false, '📅 JOUR 30 ATTEINT !');
+  } else {
+    renderCurrentEvent();
+  }
+}
+
+function endMonth(bankrupt, headline) {
+  document.getElementById('end-headline').textContent = headline;
+  const titleEl = document.getElementById('profile-title');
+  const descEl = document.getElementById('profile-desc');
+  const totalWealth = cash + savings;
+  const ratio = totalWealth / initialBudget;
+
+  if (bankrupt) {
+    titleEl.textContent = '😱 PANIER PERCÉ';
+    titleEl.style.color = '#f87171';
+    descEl.textContent = 'Ton budget a fondu avant le 30 ! Essaie d’épargner dès le début du mois.';
+  } else if (ratio >= 0.45 && mood >= 60) {
+    titleEl.textContent = '👑 PDG STRATÈGE';
+    titleEl.style.color = '#facc15';
+    descEl.textContent = 'Incroyable ! Tu termines le mois riche, serein et avec une belle épargne.';
+  } else if (ratio >= 0.2) {
+    titleEl.textContent = '🧠 GESTIONNAIRE MALIN';
+    titleEl.style.color = '#4ade80';
+    descEl.textContent = 'Bravo ! Tu as su éviter les pièges et finir le mois dans le vert.';
+  } else {
+    titleEl.textContent = '😅 SURVIVANT DU 30';
+    titleEl.style.color = '#38bdf8';
+    descEl.textContent = 'C’était juste, mais tu as survécu jusqu’à la fin du mois !';
+  }
+
+  document.getElementById('final-cash').textContent = formatMoney(cash);
+  document.getElementById('final-savings').textContent = formatMoney(savings);
+  document.getElementById('final-mood').textContent = mood + '%';
+  document.getElementById('gameover-screen').classList.remove('hidden');
+}
+
+function shareResult() {
+  document.getElementById('game-container').classList.add('vip-theme');
+  const profile = document.getElementById('profile-title').textContent;
+  const text = encodeURIComponent(`💸 J'ai relevé le défi Budget Survivor sur 30 jours ! Mon profil : ${profile} (Épargne : ${formatMoney(savings)}). Et toi, sais-tu gérer ton argent ? Teste ici : ${window.location.href}`);
+  window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+}
+
+document.getElementById('start-btn').onclick = startGame;
+document.getElementById('restart-btn').onclick = startGame;
+document.getElementById('share-btn').onclick = shareResult;
+</script>
+</body>
+</html>
