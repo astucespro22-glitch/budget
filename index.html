@@ -341,7 +341,7 @@
 
   <div class="month-bar-wrap">
     <div class="month-meta">
-      <span id="day-label">📅 Jour 1 / 30</span>
+      <span id="day-label">📅 Mois #1 • Jour 1 / 30</span>
       <span id="phase-label" style="color:#4ade80;">Semaine 1 : Début de mois</span>
     </div>
     <div class="bar-bg">
@@ -367,7 +367,7 @@
       <div class="howto-title">📋 Comment jouer (Défi 30 Jours)</div>
       <ul class="howto-list">
         <li>1️⃣ <b>Entre ton budget mensuel</b> ci-dessous (salaire ou argent de poche).</li>
-        <li>2️⃣ <b>Fais les bons choix</b> chaque jour face aux factures, sorties, imprévus et opportunités de gains.</li>
+        <li>2️⃣ <b>Fais les bons choix</b> face aux factures, sorties, imprévus et opportunités de gains.</li>
         <li>3️⃣ <b>Objectif :</b> Arriver au <b>Jour 30</b> sans finir à 0 et avec un maximum d'<b>Épargne</b> et de <b>Moral</b> !</li>
       </ul>
     </div>
@@ -405,7 +405,7 @@
         <div class="stat-val" id="final-mood">100%</div>
       </div>
     </div>
-    <button class="btn-main" id="restart-btn">NOUVEAU MOIS</button>
+    <button class="btn-main" id="restart-btn">PASSER AU MOIS SUIVANT ➡️</button>
     <button class="btn-share" id="share-btn">🎁 PARTAGER MON PROFIL SUR WHATSAPP</button>
   </div>
 </div>
@@ -451,105 +451,131 @@ function playSound(type) {
   }
 }
 
-// Scénarios proportionnels au budget initial (pct = pourcentage du revenu de départ)
+// 35 scénarios variés et réalistes avec mémoire anti-répétition
 const SCENARIOS = [
-  {
-    icon: '🏠', tag: 'CHARGE FIXE', title: 'Paiement du Loyer & Factures',
-    desc: 'Le propriétaire passe récupérer le loyer du mois et l’électricité.',
-    choices: [
-      { text: 'Payer tout rubis sur l’ongle', pctCash: -0.28, pctSave: 0, mood: +5 },
-      { text: 'Payer et réduire la clim/lumière', pctCash: -0.24, pctSave: +0.02, mood: -5 }
-    ]
-  },
-  {
-    icon: '🏦', tag: 'STRATÉGIE', title: 'Règle des 10 % d’Épargne',
-    desc: 'Tu viens de recevoir ton budget. Combien mets-tu de côté tout de suite ?',
-    choices: [
-      { text: 'Bloquer 15 % en épargne sécurisée', pctCash: -0.15, pctSave: +0.17, mood: +4 },
-      { text: 'Garder tout sur moi au cas où', pctCash: 0, pctSave: 0, mood: 0 }
-    ]
-  },
-  {
-    icon: '🍲', tag: 'ALIMENTATION', title: 'Courses de la semaine',
-    desc: 'Le frigo est vide. Comment organises-tu tes repas ?',
-    choices: [
-      { text: 'Cuisiner maison (marché local)', pctCash: -0.08, pctSave: 0, mood: +4 },
-      { text: 'Commander fast-food & livraisons', pctCash: -0.16, pctSave: 0, mood: +8 }
-    ]
-  },
-  {
-    icon: '📱', tag: 'TENTATION', title: 'Promo flash sur un nouveau téléphone',
-    desc: 'Une boutique affiche -20 % aujourd’hui seulement sur le dernier modèle !',
-    choices: [
-      { text: 'Résister, mon téléphone marche bien', pctCash: 0, pctSave: +0.03, mood: -4 },
-      { text: 'Craquer et acheter à crédit/cash', pctCash: -0.25, pctSave: 0, mood: +12 }
-    ]
-  },
-  {
-    icon: '🛵', tag: 'TRANSPORT', title: 'Déplacements quotidiens',
-    desc: 'Comment te déplaces-tu pour tes rendez-vous cette semaine ?',
-    choices: [
-      { text: 'Transport économique / covoiturage', pctCash: -0.05, pctSave: 0, mood: -3 },
-      { text: 'Taxi privé / VTC tous les jours', pctCash: -0.13, pctSave: 0, mood: +6 }
-    ]
-  },
-  {
-    icon: '💡', tag: 'OPPORTUNITÉ', title: 'Petit contrat / Revente express',
-    desc: 'Un ami te propose une mission rapide ce week-end pour arrondir tes fins de mois.',
-    choices: [
-      { text: 'Accepter la mission (+revenu)', pctCash: +0.14, pctSave: 0, mood: -8 },
-      { text: 'Se reposer ce week-end', pctCash: 0, pctSave: 0, mood: +10 }
-    ]
-  },
-  {
-    icon: '🎉', tag: 'VIE SOCIALE', title: 'Sortie entre amis vendredi soir',
-    desc: 'Tes amis t’invitent au restaurant puis en soirée VIP.',
-    choices: [
-      { text: 'Venir mais limiter les dépenses', pctCash: -0.06, pctSave: 0, mood: +6 },
-      { text: 'Payer la tournée générale !', pctCash: -0.18, pctSave: 0, mood: +14 },
-      { text: 'Décliner et rester économiser', pctCash: 0, pctSave: 0, mood: -10 }
-    ]
-  },
-  {
-    icon: '🤒', tag: 'IMPRÉVU', title: 'Coup de fatigue & Pharmacie',
-    desc: 'Un petit paludisme ou rhume nécessite des médicaments rapidement.',
-    choices: [
-      { text: 'Aller à la pharmacie tout de suite', pctCash: -0.07, pctSave: 0, mood: +5 },
-      { text: 'Attendre que ça passe tout seul', pctCash: -0.02, pctSave: 0, mood: -15 }
-    ]
-  },
-  {
-    icon: '📈', tag: 'INVESTISSEMENT', title: 'Achat en gros pour revendre',
-    desc: 'Une connaissance propose un lot de produits très demandés à prix réduit.',
-    choices: [
-      { text: 'Investir une petite part et revendre', pctCash: +0.12, pctSave: +0.05, mood: +4 },
-      { text: 'Ne pas prendre de risque', pctCash: 0, pctSave: 0, mood: 0 }
-    ]
-  },
-  {
-    icon: '🎁', tag: 'FAMILLE', title: 'Cérémonie familiale imprévue',
-    desc: 'Un proche organise un événement et compte sur ta participation.',
-    choices: [
-      { text: 'Participer raisonnablement', pctCash: -0.07, pctSave: 0, mood: +5 },
-      { text: 'Faire un gros cadeau prestigieux', pctCash: -0.16, pctSave: 0, mood: +10 }
-    ]
-  },
-  {
-    icon: '📶', tag: 'ABONNEMENTS', title: 'Forfait Internet & Streaming',
-    desc: 'Ton forfait internet expire ce soir.',
-    choices: [
-      { text: 'Prendre le forfait essentiel', pctCash: -0.04, pctSave: 0, mood: 0 },
-      { text: 'Prendre le pack illimité + TV + Musique', pctCash: -0.10, pctSave: 0, mood: +6 }
-    ]
-  },
-  {
-    icon: '🔧', tag: 'IMPRÉVU', title: 'Panne d’équipement à la maison',
-    desc: 'Un appareil indispensable tombe en panne en pleine semaine.',
-    choices: [
-      { text: 'Faire réparer chez un artisan local', pctCash: -0.06, pctSave: 0, mood: +2 },
-      { text: 'Acheter du neuf immédiatement', pctCash: -0.17, pctSave: 0, mood: +5 }
-    ]
-  }
+  { id: 1, icon: '🏠', tag: 'CHARGE FIXE', title: 'Paiement du Loyer & Factures', desc: 'Le propriétaire passe récupérer le loyer du mois et l’électricité.', choices: [
+    { text: 'Payer tout rubis sur l’ongle', pctCash: -0.26, pctSave: 0, mood: +5 },
+    { text: 'Payer et réduire la clim/lumière', pctCash: -0.22, pctSave: +0.02, mood: -5 }
+  ]},
+  { id: 2, icon: '🏦', tag: 'STRATÉGIE', title: 'Règle des 15 % d’Épargne', desc: 'Ton argent est disponible. Combien mets-tu à l’abri tout de suite ?', choices: [
+    { text: 'Bloquer 15 % en épargne sécurisée', pctCash: -0.15, pctSave: +0.17, mood: +4 },
+    { text: 'Garder tout sur moi au cas où', pctCash: 0, pctSave: 0, mood: 0 }
+  ]},
+  { id: 3, icon: '🍲', tag: 'ALIMENTATION', title: 'Courses de la semaine', desc: 'Le frigo est vide. Comment organises-tu tes repas ?', choices: [
+    { text: 'Cuisiner maison (marché local)', pctCash: -0.08, pctSave: 0, mood: +4 },
+    { text: 'Commander fast-food & livraisons', pctCash: -0.16, pctSave: 0, mood: +8 }
+  ]},
+  { id: 4, icon: '📱', tag: 'TENTATION', title: 'Promo flash sur un smartphone', desc: 'Une boutique affiche -20 % aujourd’hui seulement sur le dernier modèle !', choices: [
+    { text: 'Résister, mon téléphone marche bien', pctCash: 0, pctSave: +0.03, mood: -4 },
+    { text: 'Craquer et acheter à crédit/cash', pctCash: -0.24, pctSave: 0, mood: +12 }
+  ]},
+  { id: 5, icon: '🛵', tag: 'TRANSPORT', title: 'Déplacements quotidiens', desc: 'Comment te déplaces-tu pour tes rendez-vous cette semaine ?', choices: [
+    { text: 'Transport économique / covoiturage', pctCash: -0.05, pctSave: 0, mood: -3 },
+    { text: 'Taxi privé / VTC tous les jours', pctCash: -0.13, pctSave: 0, mood: +6 }
+  ]},
+  { id: 6, icon: '💡', tag: 'OPPORTUNITÉ', title: 'Petit contrat express le week-end', desc: 'Un contact te propose une mission rapide pour arrondir tes fins de mois.', choices: [
+    { text: 'Accepter la mission (+revenu)', pctCash: +0.14, pctSave: 0, mood: -7 },
+    { text: 'Se reposer ce week-end', pctCash: 0, pctSave: 0, mood: +10 }
+  ]},
+  { id: 7, icon: '🎉', tag: 'VIE SOCIALE', title: 'Sortie entre amis vendredi soir', desc: 'Tes amis t’invitent au restaurant puis en soirée.', choices: [
+    { text: 'Venir mais limiter les dépenses', pctCash: -0.06, pctSave: 0, mood: +6 },
+    { text: 'Payer la tournée générale !', pctCash: -0.18, pctSave: 0, mood: +14 },
+    { text: 'Décliner et rester économiser', pctCash: 0, pctSave: 0, mood: -10 }
+  ]},
+  { id: 8, icon: '🤒', tag: 'IMPRÉVU SANTÉ', title: 'Coup de fatigue & Pharmacie', desc: 'Un petit paludisme ou rhume nécessite des médicaments rapidement.', choices: [
+    { text: 'Aller à la pharmacie tout de suite', pctCash: -0.07, pctSave: 0, mood: +5 },
+    { text: 'Attendre que ça passe tout seul', pctCash: -0.02, pctSave: 0, mood: -15 }
+  ]},
+  { id: 9, icon: '📈', tag: 'BUSINESS', title: 'Achat d’un lot pour revente', desc: 'Un fournisseur propose un lot de produits très demandés à prix d’usine.', choices: [
+    { text: 'Investir une part et revendre avec marge', pctCash: +0.13, pctSave: +0.04, mood: +4 },
+    { text: 'Ne pas prendre de risque', pctCash: 0, pctSave: 0, mood: 0 }
+  ]},
+  { id: 10, icon: '🎁', tag: 'FAMILLE', title: 'Cérémonie familiale imprévue', desc: 'Un proche organise un mariage/baptême et compte sur ta présence.', choices: [
+    { text: 'Participer raisonnablement', pctCash: -0.07, pctSave: 0, mood: +5 },
+    { text: 'Faire un gros cadeau prestigieux', pctCash: -0.16, pctSave: 0, mood: +10 }
+  ]},
+  { id: 11, icon: '📶', tag: 'NUMÉRIQUE', title: 'Forfait Internet & Streaming', desc: 'Ton forfait internet expire ce soir.', choices: [
+    { text: 'Prendre le forfait essentiel', pctCash: -0.04, pctSave: 0, mood: 0 },
+    { text: 'Prendre le pack illimité + TV + Musique', pctCash: -0.10, pctSave: 0, mood: +6 }
+  ]},
+  { id: 12, icon: '🔧', tag: 'MAISON', title: 'Panne d’appareil à la maison', desc: 'Un équipement indispensable tombe en panne en pleine semaine.', choices: [
+    { text: 'Faire réparer chez un artisan local', pctCash: -0.06, pctSave: 0, mood: +2 },
+    { text: 'Acheter du neuf immédiatement', pctCash: -0.17, pctSave: 0, mood: +5 }
+  ]},
+  { id: 13, icon: '🤝', tag: 'TONTINE', title: 'Invitation à une tontine entre collègues', desc: 'Cinq collègues lancent une tontine sérieuse ce mois-ci.', choices: [
+    { text: 'Cotiser 10 % pour préparer un projet', pctCash: -0.10, pctSave: +0.12, mood: +5 },
+    { text: 'Refuser et garder ses liquidités', pctCash: 0, pctSave: 0, mood: 0 }
+  ]},
+  { id: 14, icon: '👟', tag: 'SHOPPING', title: 'Vente privée de vêtements & baskets', desc: 'Ton meilleur ami t’envoie le catalogue d’une nouvelle collection.', choices: [
+    { text: 'Acheter juste un article utile', pctCash: -0.07, pctSave: 0, mood: +5 },
+    { text: 'Refaire toute sa garde-robe', pctCash: -0.19, pctSave: 0, mood: +12 },
+    { text: 'Passer son tour', pctCash: 0, pctSave: +0.02, mood: -3 }
+  ]},
+  { id: 15, icon: '💻', tag: 'FORMATION', title: 'Formation pratique en ligne', desc: 'Une formation courte permet d’apprendre une compétence rentable.', choices: [
+    { text: 'Investir dans la formation (+bonus travail)', pctCash: -0.08, pctSave: +0.05, mood: +8 },
+    { text: 'Regarder des vidéos gratuites à la place', pctCash: 0, pctSave: 0, mood: +2 }
+  ]},
+  { id: 16, icon: '💸', tag: 'SOLICITATION', title: 'Un cousin demande un prêt urgent', desc: 'Il promet de te rembourser « dès la semaine prochaine ».', choices: [
+    { text: 'Donner une petite aide sans attendre de retour', pctCash: -0.05, pctSave: 0, mood: +4 },
+    { text: 'Prêter une grosse somme', pctCash: -0.15, pctSave: 0, mood: -6 },
+    { text: 'Expliquer poliment que ton budget est bouclé', pctCash: 0, pctSave: 0, mood: -3 }
+  ]},
+  { id: 17, icon: '⚡', tag: 'FACTURE', title: 'Facture d’eau et d’électricité élevée', desc: 'La facture du mois arrive avec une légère hausse.', choices: [
+    { text: 'Régler immédiatement pour éviter les pénalités', pctCash: -0.09, pctSave: 0, mood: -2 },
+    { text: 'Payer et débrancher les appareils en veille', pctCash: -0.08, pctSave: +0.02, mood: 0 }
+  ]},
+  { id: 18, icon: '⚽', tag: 'LOISIRS', title: 'Grand match de football ce soir', desc: 'Tout le quartier se retrouve au maquis/bar sportif pour regarder le choc.', choices: [
+    { text: 'Regarder le match à la maison entre amis', pctCash: -0.03, pctSave: 0, mood: +6 },
+    { text: 'Sortir et consommer toute la soirée', pctCash: -0.12, pctSave: 0, mood: +10 }
+  ]},
+  { id: 19, icon: '📦', tag: 'VENTE', title: 'Vendre des objets inutilisés', desc: 'Tu fais du tri chez toi et tu trouves deux appareils en bon état.', choices: [
+    { text: 'Les publier en ligne et encaisser', pctCash: +0.11, pctSave: 0, mood: +5 },
+    { text: 'Les garder au fond du placard', pctCash: 0, pctSave: 0, mood: 0 }
+  ]},
+  { id: 20, icon: '💇', tag: 'BIEN-ÊTRE', title: 'Coiffeur / Soins personnels', desc: 'Tu as un rendez-vous important demain matin.', choices: [
+    { text: 'Coupe classique chez ton coiffeur habituel', pctCash: -0.04, pctSave: 0, mood: +6 },
+    { text: 'Formule VIP complète en salon de luxe', pctCash: -0.11, pctSave: 0, mood: +10 }
+  ]},
+  { id: 21, icon: '🎰', tag: 'PIÈGE', title: 'Tentation des paris sportifs', desc: 'Un groupe Telegram promet un « score exact garanti à 100 % ».', choices: [
+    { text: 'Ignorer cette arnaque et protéger son argent', pctCash: 0, pctSave: +0.03, mood: +4 },
+    { text: 'Miser gros pour tenter le jackpot', pctCash: -0.16, pctSave: 0, mood: -12 }
+  ]},
+  { id: 22, icon: '🏆', tag: 'BONUS', title: 'Prime de performance / Pourboire', desc: 'Ton sérieux au travail est récompensé par un bonus inattendu !', choices: [
+    { text: 'Mettre la moitié en épargne et garder le reste', pctCash: +0.08, pctSave: +0.08, mood: +10 },
+    { text: 'Tout dépenser pour fêter ça', pctCash: +0.02, pctSave: 0, mood: +14 }
+  ]},
+  { id: 23, icon: '🚕', tag: 'IMPRÉVU', title: 'Retard le matin sous la pluie', desc: 'Il pleut fort et tu risques d’arriver en retard à un rendez-vous clé.', choices: [
+    { text: 'Prendre un taxi rapide pour être à l’heure', pctCash: -0.06, pctSave: 0, mood: +3 },
+    { text: 'Attendre la fin de l’averse', pctCash: -0.02, pctSave: 0, mood: -7 }
+  ]},
+  { id: 24, icon: '📚', tag: 'ÉDUCATION', title: 'Fournitures & Livres', desc: 'Des frais scolaires ou de documentation s’imposent cette semaine.', choices: [
+    { text: 'Acheter d’occasion / format numérique', pctCash: -0.05, pctSave: 0, mood: +2 },
+    { text: 'Acheter tout neuf en librairie', pctCash: -0.11, pctSave: 0, mood: +4 }
+  ]},
+  { id: 25, icon: '🥗', tag: 'HABITUDE', title: 'Pause déjeuner au travail', desc: 'Chaque midi, la tentation du restaurant est forte.', choices: [
+    { text: 'Apporter sa gamelle préparée à la maison', pctCash: -0.03, pctSave: +0.04, mood: +2 },
+    { text: 'Manger au restaurant tous les midis', pctCash: -0.13, pctSave: 0, mood: +7 }
+  ]},
+  { id: 26, icon: '🔑', tag: 'SÉCURITÉ', title: 'Double des clés & Serrure', desc: 'La serrure de ta porte commence à coincer sérieusement.', choices: [
+    { text: 'Changer la serrure préventivement', pctCash: -0.06, pctSave: 0, mood: +5 },
+    { text: 'Attendre qu’elle bloque complètement', pctCash: -0.12, pctSave: 0, mood: -10 }
+  ]},
+  { id: 27, icon: '🌱', tag: 'ÉPARGNE', title: 'Intérêts de ton compte épargne', desc: 'Ta banque verse une petite prime de fidélité sur ton épargne.', choices: [
+    { text: 'Réinvestir les intérêts dans l’épargne', pctCash: 0, pctSave: +0.06, mood: +6 },
+    { text: 'Transférer vers le solde courant', pctCash: +0.05, pctSave: 0, mood: +4 }
+  ]},
+  { id: 28, icon: '🎂', tag: 'CADEAU', title: 'Anniversaire d’un ami proche', desc: 'C’est l’anniversaire de ton meilleur ami demain.', choices: [
+    { text: 'Offrir un cadeau symbolique et personnalisé', pctCash: -0.05, pctSave: 0, mood: +7 },
+    { text: 'Acheter un parfum de grande marque', pctCash: -0.14, pctSave: 0, mood: +10 }
+  ]},
+  { id: 29, icon: '🏋️', tag: 'SANTÉ', title: 'Abonnement salle de sport', desc: 'Une salle de sport ouvre près de chez toi.', choices: [
+    { text: 'Faire du footing / sport gratuit dehors', pctCash: 0, pctSave: 0, mood: +8 },
+    { text: 'Prendre l’abonnement mensuel', pctCash: -0.08, pctSave: 0, mood: +12 }
+  ]},
+  { id: 30, icon: '🧾', tag: 'ADMINISTRATION', title: 'Renouvellement de pièce / Timbre fiscal', desc: 'Un document officiel arrive à expiration ce mois-ci.', choices: [
+    { text: 'Faire la démarche tout de suite sans frais extra', pctCash: -0.06, pctSave: 0, mood: +3 },
+    { text: 'Attendre la dernière minute (urgence)', pctCash: -0.11, pctSave: 0, mood: -6 }
+  ]}
 ];
 
 let initialBudget = 150000;
@@ -560,6 +586,8 @@ let mood = 100;
 let day = 1;
 let stepIndex = 0;
 let monthDeck = [];
+let monthNumber = parseInt(localStorage.getItem('budget_month_num')) || 1;
+let seenIds = JSON.parse(localStorage.getItem('budget_seen_ids') || '[]');
 
 function formatMoney(val) {
   const rounded = Math.round(val);
@@ -576,7 +604,7 @@ function updateHUD() {
   moodEl.textContent = mood + '%';
   moodEl.style.color = mood < 30 ? '#f87171' : '#facc15';
 
-  document.getElementById('day-label').textContent = `📅 Jour ${day} / 30`;
+  document.getElementById('day-label').textContent = `📅 Mois #${monthNumber} • Jour ${day} / 30`;
   document.getElementById('month-progress').style.width = `${Math.min(100, (day / 30) * 100)}%`;
 
   const phaseEl = document.getElementById('phase-label');
@@ -585,8 +613,28 @@ function updateHUD() {
   else { phaseEl.textContent = '🔴 Semaine 4 : Dernière ligne droite !'; phaseEl.style.color = '#f87171'; }
 }
 
-function startGame() {
+// Sélectionne 10 scénarios jamais vus en priorité pour éviter toute répétition d'un mois à l'autre
+function buildUniqueDeck() {
+  let unseen = SCENARIOS.filter(s => !seenIds.includes(s.id));
+  if (unseen.length < 10) {
+    // Si presque tout le catalogue a été vu, on réinitialise l'historique en gardant les 10 derniers exclus
+    const lastTen = seenIds.slice(-10);
+    seenIds = [...lastTen];
+    unseen = SCENARIOS.filter(s => !seenIds.includes(s.id));
+  }
+  const picked = unseen.sort(() => Math.random() - 0.5).slice(0, 10);
+  picked.forEach(s => seenIds.push(s.id));
+  localStorage.setItem('budget_seen_ids', JSON.stringify(seenIds));
+  return picked;
+}
+
+function startGame(isNextMonth = false) {
   initAudio();
+  if (isNextMonth) {
+    monthNumber++;
+    localStorage.setItem('budget_month_num', monthNumber);
+  }
+
   const inputVal = parseFloat(document.getElementById('initial-budget').value);
   initialBudget = (!isNaN(inputVal) && inputVal >= 100) ? inputVal : 150000;
   currency = document.getElementById('currency-select').value;
@@ -596,11 +644,7 @@ function startGame() {
   mood = 100;
   day = 1;
   stepIndex = 0;
-
-  // Créer une suite de 10 événements sur les 30 jours (chaque choix fait avancer de 3 jours)
-  const fixedFirst = [SCENARIOS[1], SCENARIOS[0]];
-  const others = SCENARIOS.slice(2).sort(() => Math.random() - 0.5).slice(0, 8);
-  monthDeck = [...fixedFirst, ...others];
+  monthDeck = buildUniqueDeck();
 
   document.getElementById('toast-feedback').textContent = '';
   document.getElementById('start-screen').classList.add('hidden');
@@ -656,7 +700,6 @@ function makeChoice(ch) {
     toast.style.color = '#facc15';
   }
 
-  // Vérifier faillite ou épuisement moral avant la fin du mois
   if (cash < 0) {
     cash = 0;
     updateHUD();
@@ -670,7 +713,7 @@ function makeChoice(ch) {
   updateHUD();
 
   if (stepIndex >= monthDeck.length) {
-    endMonth(false, '📅 JOUR 30 ATTEINT !');
+    endMonth(false, `📅 BILAN DU MOIS #${monthNumber}`);
   } else {
     renderCurrentEvent();
   }
@@ -710,12 +753,12 @@ function endMonth(bankrupt, headline) {
 function shareResult() {
   document.getElementById('game-container').classList.add('vip-theme');
   const profile = document.getElementById('profile-title').textContent;
-  const text = encodeURIComponent(`💸 J'ai relevé le défi Budget Survivor sur 30 jours ! Mon profil : ${profile} (Épargne : ${formatMoney(savings)}). Et toi, sais-tu gérer ton argent ? Teste ici : ${window.location.href}`);
+  const text = encodeURIComponent(`💸 J'ai relevé le défi Budget Survivor (Mois #${monthNumber}) ! Mon profil : ${profile} (Épargne : ${formatMoney(savings)}). Et toi, sais-tu gérer ton argent ? Teste ici : ${window.location.href}`);
   window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
 }
 
-document.getElementById('start-btn').onclick = startGame;
-document.getElementById('restart-btn').onclick = startGame;
+document.getElementById('start-btn').onclick = () => startGame(false);
+document.getElementById('restart-btn').onclick = () => startGame(true);
 document.getElementById('share-btn').onclick = shareResult;
 </script>
 </body>
